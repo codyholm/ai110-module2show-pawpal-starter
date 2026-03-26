@@ -3,13 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
+
+
+class Priority(Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 @dataclass
 class Task:
     title: str
     duration_minutes: int
-    priority: str  # "high", "medium", or "low"
+    priority: Priority
+    pet_name: str
 
 
 @dataclass
@@ -31,6 +39,10 @@ class Owner:
 
     def add_pet(self, pet: Pet) -> None:
         """Register a pet under this owner."""
+        ...
+
+    def get_all_tasks(self) -> list[Task]:
+        """Gather tasks across all pets."""
         ...
 
 
