@@ -32,14 +32,19 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Smarter Scheduling
+## Demo
 
-The Scheduler supports four algorithmic features beyond basic task ordering:
+<a href="demo_screenshot.png" target="_blank"><img src="demo_screenshot.png" title="PawPal+ App" width="" alt="PawPal+ App" /></a>
 
-- **Sort by time** — `sort_by_time()` returns tasks in chronological order using HH:MM string comparison.
-- **Filter by pet or status** — `filter_by_pet(name)` and `filter_by_status(completed)` narrow the task list.
-- **Recurring tasks** — Completing a daily or weekly task automatically creates the next occurrence with an updated `due_date` (using `timedelta`).
-- **Conflict detection** — `detect_conflicts()` identifies overlapping time windows by converting HH:MM to minutes and comparing each task's start against the previous task's end time.
+## Features
+
+- **Priority-based scheduling** — Tasks are ordered by priority (high > medium > low), then by scheduled time within the same priority level.
+- **Chronological sorting** — Toggle to view the full schedule sorted by time instead of priority.
+- **Per-pet filtering** — Filter the schedule to show only one pet's tasks at a time.
+- **Conflict detection** — Overlapping time windows are flagged with warnings. Adjacent tasks (end time == start time) are correctly recognized as non-conflicting.
+- **Recurring tasks** — Tasks can be set to daily, weekly, or one-time frequency. Completing a recurring task generates the next occurrence with an updated due date.
+- **Status tracking** — Schedule view shows a summary of completed vs. remaining tasks.
+- **Schedule explanation** — The app explains why tasks were ordered the way they were.
 
 ## Testing PawPal+
 
