@@ -25,26 +25,24 @@ whiskers.add_task(Task("Enrichment puzzle", 25, Priority.LOW, "Whiskers"))
 scheduler = Scheduler(owner)
 scheduler.generate_schedule()
 
-print("=" * 50)
-print(f"  Today's Schedule for {owner.name}")
-print(f"  Time budget: {owner.available_minutes} minutes")
-print("=" * 50)
+print()
+print(f"Today's Schedule for {owner.name} ({owner.available_minutes} min available)")
+print("Priority first, then shortest duration.")
+print()
+print(f"  {'#':<4} {'Task':<20} {'Pet':<12} {'Time':>6}  Priority")
+print(f"  {'--':<4} {'--------------------':<20} {'------------':<12} {'------':>6}  --------")
 
 total = 0
 for i, task in enumerate(scheduler.schedule, start=1):
     total += task.duration_minutes
-    print(f"  {i}. [{task.priority.value.upper():6s}] {task.title:<20s} "
-          f"({task.pet_name}) - {task.duration_minutes} min")
+    print(f"  {f'{i}.':<4} {task.title:<20} {task.pet_name:<12} {task.duration_minutes:>4} min  {task.priority.value.upper()}")
 
-print("-" * 50)
-print(f"  Total: {total} / {owner.available_minutes} minutes")
+print(f"  {'':<4} {'':<20} {'':<12} {'------':>6}")
+print(f"  {'':<4} {'':<20} {'Total:':>12} {total:>4} / {owner.available_minutes} min")
 
 skipped = [t for t in owner.get_all_tasks() if t not in scheduler.schedule]
 if skipped:
     print()
     print("  Skipped (not enough time):")
     for task in skipped:
-        print(f"    - {task.title} ({task.pet_name}) - {task.duration_minutes} min")
-
-print()
-print(scheduler.get_explanation())
+        print(f"    - {task.title} ({task.pet_name}) - {task.duration_minutes} min, {task.priority.value}")
