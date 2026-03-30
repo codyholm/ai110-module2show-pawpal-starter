@@ -32,6 +32,7 @@ with col2:
 
 if st.button("Add pet"):
     owner.add_pet(Pet(name=pet_name, species=species))
+    st.session_state.pop("scheduler", None)
 
 if owner.pets:
     for pet in owner.pets:
@@ -53,13 +54,15 @@ if owner.pets:
     with col2:
         task_description = st.text_input("Description", value="Morning walk")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         task_time = st.text_input("Time (HH:MM)", value="08:00")
     with col2:
         duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
     with col3:
         priority = st.selectbox("Priority", ["high", "medium", "low"])
+    with col4:
+        frequency = st.selectbox("Frequency", ["once", "daily", "weekly"])
 
     if st.button("Add task"):
         selected_pet = next(p for p in owner.pets if p.name == selected_pet_name)
@@ -69,8 +72,10 @@ if owner.pets:
             priority=Priority(priority),
             pet_name=selected_pet_name,
             time=task_time,
+            frequency=frequency,
         )
         selected_pet.add_task(task)
+        st.session_state.pop("scheduler", None)
 
     all_tasks = owner.get_all_tasks()
     if all_tasks:
@@ -81,6 +86,7 @@ if owner.pets:
                 "Time": t.time,
                 "Duration": f"{t.duration_minutes} min",
                 "Priority": t.priority.value,
+                "Frequency": t.frequency,
             }
             for t in all_tasks
         ])
@@ -100,18 +106,61 @@ if st.button("Generate schedule"):
     else:
         scheduler = Scheduler(owner)
         scheduler.generate_schedule()
+        st.session_state.scheduler = scheduler
 
-        if scheduler.schedule:
-            st.table([
-                {
-                    "#": i,
-                    "Task": t.description,
-                    "Pet": t.pet_name,
-                    "Time": t.time,
-                    "Duration": f"{t.duration_minutes} min",
-                    "Priority": t.priority.value,
-                }
-                for i, t in enumerate(scheduler.schedule, start=1)
-            ])
+if "scheduler" in st.session_state:
+    scheduler = st.session_state.scheduler
 
-        st.markdown(scheduler.get_explanation())
+    # --- Sort / filter controls ---
+    col1, col2 = st.columns(2)
+    with col1:
+        sort_mode = st.radio("Sort by", ["Priority", "Time"], horizontal=True)
+    with col2:
+        pet_names = [p.name for p in owner.pets]
+        pet_filter = st.selectbox(
+            "Filter by pet", ["All pets"] + pet_names, key="pet_filter",
+        )
+
+    if pet_filter != "All pets":
+        tasks = scheduler.filter_by_pet(pet_filter)
+    else:
+        tasks = scheduler.owner.get_all_tasks()
+
+    if sort_mode == "Time":
+        tasks = sorted(tasks, key=lambda t: t.time)
+    else:
+        priority_rank = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
+        tasks = sorted(tasks, key=lambda t: (priority_rank[t.priority], t.time))
+
+    # --- Schedule table ---
+    if tasks:
+        st.table([
+            {
+                "#": i,
+                "Task": t.description,
+                "Pet": t.pet_name,
+                "Time": t.time,
+                "Duration": f"{t.duration_minutes} min",
+                "Priority": t.priority.value,
+                "Frequency": t.frequency,
+            }
+            for i, t in enumerate(tasks, start=1)
+        ])
+    else:
+        st.info("No tasks match this filter.")
+
+    # --- Conflict detection (always checks full schedule) ---
+    conflicts = scheduler.detect_conflicts()
+    if conflicts:
+        for warning in conflicts:
+            st.warning(warning)
+    else:
+        st.success("No scheduling conflicts detected.")
+
+    # --- Status summary ---
+    done = scheduler.filter_by_status(completed=True)
+    remaining = scheduler.filter_by_status(completed=False)
+    st.info(f"{len(done)} completed, {len(remaining)} remaining")
+
+    # --- Explanation ---
+    st.markdown(scheduler.get_explanation())
