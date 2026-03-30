@@ -18,6 +18,12 @@ class Task:
     duration_minutes: int
     priority: Priority
     pet_name: str
+    frequency: str = "daily"
+    completed: bool = False
+
+    def mark_complete(self) -> None:
+        """Mark this task as done."""
+        self.completed = True
 
 
 @dataclass
