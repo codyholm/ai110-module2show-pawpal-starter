@@ -67,6 +67,19 @@ class Scheduler:
         )
         return self.schedule
 
+    def sort_by_time(self) -> list[Task]:
+        """Sort all tasks chronologically by their scheduled time."""
+        all_tasks = self.owner.get_all_tasks()
+        return sorted(all_tasks, key=lambda t: t.time)
+
+    def filter_by_pet(self, pet_name: str) -> list[Task]:
+        """Return only tasks belonging to the given pet."""
+        return [t for t in self.owner.get_all_tasks() if t.pet_name == pet_name]
+
+    def filter_by_status(self, completed: bool) -> list[Task]:
+        """Return tasks matching the given completion status."""
+        return [t for t in self.owner.get_all_tasks() if t.completed == completed]
+
     def get_explanation(self) -> str:
         """Return a human-readable explanation of why tasks were ordered this way."""
         if not self.schedule:

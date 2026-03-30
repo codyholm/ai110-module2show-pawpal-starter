@@ -37,3 +37,22 @@ for i, task in enumerate(scheduler.schedule, start=1):
         f"  {f'{i}.':<4} {task.description:<20} {task.pet_name:<12} {task.time:>6}"
         f"  {task.duration_minutes:>4} min  {task.priority.value.upper()}"
     )
+
+# --- Sort by time (chronological) ---
+print()
+print("Sorted by time (chronological):")
+print()
+for task in scheduler.sort_by_time():
+    print(f"  {task.time}  {task.description:<20} ({task.pet_name})")
+
+# --- Filter by pet ---
+print()
+print("Mochi's tasks only:")
+for task in scheduler.filter_by_pet("Mochi"):
+    print(f"  {task.time}  {task.description} - {task.duration_minutes} min")
+
+# --- Filter by status ---
+mochi.tasks[0].mark_complete()
+print()
+print(f"Completed: {scheduler.filter_by_status(completed=True)[0].description}")
+print(f"Incomplete tasks: {len(scheduler.filter_by_status(completed=False))}")
