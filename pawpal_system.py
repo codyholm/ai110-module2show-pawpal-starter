@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from enum import Enum
 
 
@@ -19,12 +20,28 @@ class Task:
     priority: Priority
     pet_name: str
     time: str = "08:00"
-    frequency: str = "daily"
+    frequency: str = "once"
     completed: bool = False
+    due_date: date = field(default_factory=date.today)
 
-    def mark_complete(self) -> None:
-        """Mark this task as done."""
+    def mark_complete(self) -> Task | None:
+        """Mark this task as done. Returns the next occurrence if recurring."""
         self.completed = True
+        if self.frequency == "daily":
+            next_date = self.due_date + timedelta(days=1)
+        elif self.frequency == "weekly":
+            next_date = self.due_date + timedelta(weeks=1)
+        else:
+            return None
+        return Task(
+            description=self.description,
+            duration_minutes=self.duration_minutes,
+            priority=self.priority,
+            pet_name=self.pet_name,
+            time=self.time,
+            frequency=self.frequency,
+            due_date=next_date,
+        )
 
 
 @dataclass
