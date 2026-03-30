@@ -100,18 +100,19 @@ class Scheduler:
     def detect_conflicts(self) -> list[str]:
         """Check for overlapping tasks and return warning messages."""
         tasks = self.sort_by_time()
+
+        # Convert HH:MM strings to minutes since midnight once upfront
+        starts = []
+        for t in tasks:
+            parts = t.time.split(":")
+            starts.append(int(parts[0]) * 60 + int(parts[1]))
+
         warnings = []
         for i in range(len(tasks)):
-            # Calculate end time in minutes since midnight
-            h1, m1 = map(int, tasks[i].time.split(":"))
-            start1 = h1 * 60 + m1
-            end1 = start1 + tasks[i].duration_minutes
+            end_i = starts[i] + tasks[i].duration_minutes
             for j in range(i + 1, len(tasks)):
-                h2, m2 = map(int, tasks[j].time.split(":"))
-                start2 = h2 * 60 + m2
-                # Since tasks are sorted by time, if start2 >= end1
-                # then no further tasks can overlap with task i
-                if start2 >= end1:
+                # Tasks are sorted, so no later task can overlap either
+                if starts[j] >= end_i:
                     break
                 warnings.append(
                     f"Conflict: '{tasks[i].description}' ({tasks[i].time}, "
