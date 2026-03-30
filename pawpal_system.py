@@ -14,10 +14,11 @@ class Priority(Enum):
 
 @dataclass
 class Task:
-    title: str
+    description: str
     duration_minutes: int
     priority: Priority
     pet_name: str
+    time: str = "08:00"
     frequency: str = "daily"
     completed: bool = False
 
@@ -40,7 +41,6 @@ class Pet:
 @dataclass
 class Owner:
     name: str
-    available_minutes: int
     pets: list[Pet] = field(default_factory=list)
 
     def add_pet(self, pet: Pet) -> None:
@@ -58,21 +58,13 @@ class Scheduler:
         self.schedule: list[Task] = []
 
     def generate_schedule(self) -> list[Task]:
-        """Build an ordered daily schedule from all pets' tasks, respecting constraints."""
+        """Build an ordered daily schedule, sorted by priority then scheduled time."""
         priority_rank = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
         all_tasks = self.owner.get_all_tasks()
-        sorted_tasks = sorted(
+        self.schedule = sorted(
             all_tasks,
-            key=lambda t: (priority_rank[t.priority], t.duration_minutes),
+            key=lambda t: (priority_rank[t.priority], t.time),
         )
-
-        total_minutes = 0
-        self.schedule = []
-        for task in sorted_tasks:
-            if total_minutes + task.duration_minutes <= self.owner.available_minutes:
-                self.schedule.append(task)
-                total_minutes += task.duration_minutes
-
         return self.schedule
 
     def get_explanation(self) -> str:
@@ -81,33 +73,18 @@ class Scheduler:
             return "No tasks scheduled."
 
         lines = [
-            f"Schedule for {self.owner.name} "
-            f"({self.owner.available_minutes} minutes available):",
+            f"Schedule for {self.owner.name}:",
             "",
             "Tasks are ordered by priority (high first), "
-            "then by shortest duration within the same priority.",
+            "then by scheduled time within the same priority.",
             "",
         ]
 
-        total = 0
         for i, task in enumerate(self.schedule, start=1):
-            total += task.duration_minutes
             lines.append(
-                f"  {i}. {task.title} for {task.pet_name} "
-                f"- {task.duration_minutes} min ({task.priority.value} priority)"
+                f"  {i}. {task.description} for {task.pet_name} "
+                f"at {task.time} - {task.duration_minutes} min "
+                f"({task.priority.value} priority)"
             )
-
-        lines.append("")
-        lines.append(f"Total scheduled: {total} / {self.owner.available_minutes} minutes")
-
-        skipped = [t for t in self.owner.get_all_tasks() if t not in self.schedule]
-        if skipped:
-            lines.append("")
-            lines.append("Skipped (not enough time):")
-            for task in skipped:
-                lines.append(
-                    f"  - {task.title} for {task.pet_name} "
-                    f"- {task.duration_minutes} min ({task.priority.value} priority)"
-                )
 
         return "\n".join(lines)

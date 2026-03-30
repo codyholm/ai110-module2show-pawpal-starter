@@ -9,23 +9,15 @@ st.caption("A pet care planning assistant that schedules tasks by priority and t
 
 # --- Session state: keep the Owner alive across reruns ---
 if "owner" not in st.session_state:
-    st.session_state.owner = Owner(name="Jordan", available_minutes=60)
+    st.session_state.owner = Owner(name="Jordan")
 
 owner = st.session_state.owner
 
 # --- Owner setup ---
 st.subheader("Owner")
-col1, col2 = st.columns(2)
-with col1:
-    new_name = st.text_input("Name", value=owner.name)
-    if new_name != owner.name:
-        owner.name = new_name
-with col2:
-    new_minutes = st.number_input(
-        "Available minutes", min_value=1, max_value=480, value=owner.available_minutes
-    )
-    if new_minutes != owner.available_minutes:
-        owner.available_minutes = new_minutes
+new_name = st.text_input("Name", value=owner.name)
+if new_name != owner.name:
+    owner.name = new_name
 
 st.divider()
 
@@ -59,21 +51,24 @@ if owner.pets:
     with col1:
         selected_pet_name = st.selectbox("Pet", pet_names)
     with col2:
-        task_title = st.text_input("Task title", value="Morning walk")
+        task_description = st.text_input("Description", value="Morning walk")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
+        task_time = st.text_input("Time (HH:MM)", value="08:00")
     with col2:
+        duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
+    with col3:
         priority = st.selectbox("Priority", ["high", "medium", "low"])
 
     if st.button("Add task"):
         selected_pet = next(p for p in owner.pets if p.name == selected_pet_name)
         task = Task(
-            title=task_title,
+            description=task_description,
             duration_minutes=int(duration),
             priority=Priority(priority),
             pet_name=selected_pet_name,
+            time=task_time,
         )
         selected_pet.add_task(task)
 
@@ -82,7 +77,8 @@ if owner.pets:
         st.table([
             {
                 "Pet": t.pet_name,
-                "Task": t.title,
+                "Task": t.description,
+                "Time": t.time,
                 "Duration": f"{t.duration_minutes} min",
                 "Priority": t.priority.value,
             }
@@ -109,8 +105,9 @@ if st.button("Generate schedule"):
             st.table([
                 {
                     "#": i,
-                    "Task": t.title,
+                    "Task": t.description,
                     "Pet": t.pet_name,
+                    "Time": t.time,
                     "Duration": f"{t.duration_minutes} min",
                     "Priority": t.priority.value,
                 }
