@@ -41,6 +41,28 @@ The Scheduler supports four algorithmic features beyond basic task ordering:
 - **Recurring tasks** — Completing a daily or weekly task automatically creates the next occurrence with an updated `due_date` (using `timedelta`).
 - **Conflict detection** — `detect_conflicts()` identifies overlapping time windows by converting HH:MM to minutes and comparing each task's start against the previous task's end time.
 
+## Testing PawPal+
+
+Run the test suite:
+
+```bash
+python -m pytest
+```
+
+The suite includes 15 tests across five categories:
+
+| Category                 | Tests | What they verify                                                                          |
+| ------------------------ | ----- | ----------------------------------------------------------------------------------------- |
+| Sorting correctness      | 3     | Chronological ordering, priority-then-time scheduling, stable sort for same-time tasks    |
+| Recurrence logic         | 3     | Daily tasks advance by 1 day, weekly by 7 days, one-time tasks produce no next occurrence |
+| Conflict detection       | 3     | Overlapping windows flagged, non-overlapping clean, adjacent (end == start) not flagged   |
+| Filtering                | 2     | Filter by pet name isolates correctly, filter by status partitions complete vs incomplete  |
+| Aggregation / edge cases | 2     | Multi-pet task flattening, empty schedule sentinel                                        |
+
+### Confidence level: 4/5
+
+Core scheduling logic (sorting, recurrence, conflicts) is well covered with both happy paths and boundary conditions. The missing star: we don't yet test the Streamlit UI layer or validate user input edge cases (e.g., malformed time strings).
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.
