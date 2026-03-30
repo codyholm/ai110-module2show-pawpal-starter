@@ -97,6 +97,30 @@ class Scheduler:
         """Return tasks matching the given completion status."""
         return [t for t in self.owner.get_all_tasks() if t.completed == completed]
 
+    def detect_conflicts(self) -> list[str]:
+        """Check for overlapping tasks and return warning messages."""
+        tasks = self.sort_by_time()
+        warnings = []
+        for i in range(len(tasks)):
+            # Calculate end time in minutes since midnight
+            h1, m1 = map(int, tasks[i].time.split(":"))
+            start1 = h1 * 60 + m1
+            end1 = start1 + tasks[i].duration_minutes
+            for j in range(i + 1, len(tasks)):
+                h2, m2 = map(int, tasks[j].time.split(":"))
+                start2 = h2 * 60 + m2
+                # Since tasks are sorted by time, if start2 >= end1
+                # then no further tasks can overlap with task i
+                if start2 >= end1:
+                    break
+                warnings.append(
+                    f"Conflict: '{tasks[i].description}' ({tasks[i].time}, "
+                    f"{tasks[i].duration_minutes} min) overlaps with "
+                    f"'{tasks[j].description}' ({tasks[j].time}, "
+                    f"{tasks[j].duration_minutes} min)"
+                )
+        return warnings
+
     def get_explanation(self) -> str:
         """Return a human-readable explanation of why tasks were ordered this way."""
         if not self.schedule:

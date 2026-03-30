@@ -20,6 +20,8 @@ whiskers.add_task(Task("Feeding", 10, Priority.HIGH, "Whiskers", time="07:00", f
 mochi.add_task(Task("Morning walk", 30, Priority.HIGH, "Mochi", time="08:00", frequency="daily"))
 mochi.add_task(Task("Medication", 5, Priority.HIGH, "Mochi", time="09:00", frequency="weekly"))
 whiskers.add_task(Task("Enrichment puzzle", 25, Priority.LOW, "Whiskers", time="16:00"))
+# Overlapping task: Vet visit at 08:15 overlaps Morning walk (08:00, 30 min)
+mochi.add_task(Task("Vet visit", 60, Priority.HIGH, "Mochi", time="08:15"))
 
 # --- Generate and display schedule ---
 scheduler = Scheduler(owner)
@@ -50,6 +52,16 @@ print()
 print("Mochi's tasks only:")
 for task in scheduler.filter_by_pet("Mochi"):
     print(f"  {task.time}  {task.description} - {task.duration_minutes} min")
+
+# --- Conflict detection ---
+print()
+conflicts = scheduler.detect_conflicts()
+if conflicts:
+    print(f"Conflicts detected ({len(conflicts)}):")
+    for warning in conflicts:
+        print(f"  {warning}")
+else:
+    print("No conflicts detected.")
 
 # --- Filter by status ---
 mochi.tasks[0].mark_complete()
