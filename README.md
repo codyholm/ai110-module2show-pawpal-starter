@@ -45,6 +45,7 @@ pip install -r requirements.txt
 - **Recurring tasks** — Tasks can be set to daily, weekly, or one-time frequency. Completing a recurring task generates the next occurrence with an updated due date.
 - **Status tracking** — Schedule view shows a summary of completed vs. remaining tasks.
 - **Schedule explanation** — The app explains why tasks were ordered the way they were.
+- **Data persistence** — Pets and tasks are saved to `data.json` automatically and restored on app restart.
 
 ## Testing PawPal+
 
@@ -54,7 +55,7 @@ Run the test suite:
 python -m pytest
 ```
 
-The suite includes 15 tests across five categories:
+The suite includes 19 tests across six categories:
 
 | Category                 | Tests | What they verify                                                                          |
 | ------------------------ | ----- | ----------------------------------------------------------------------------------------- |
@@ -63,6 +64,7 @@ The suite includes 15 tests across five categories:
 | Conflict detection       | 3     | Overlapping windows flagged, non-overlapping clean, adjacent (end == start) not flagged   |
 | Filtering                | 2     | Filter by pet name isolates correctly, filter by status partitions complete vs incomplete  |
 | Aggregation / edge cases | 2     | Multi-pet task flattening, empty schedule sentinel                                        |
+| Serialization            | 4     | Task/Pet dict round-trip, Owner JSON file round-trip, missing file error                  |
 
 ### Confidence level: 4/5
 
