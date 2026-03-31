@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from enum import Enum
+import json
 
 
 class Priority(Enum):
@@ -43,6 +44,31 @@ class Task:
             due_date=next_date,
         )
 
+    def to_dict(self) -> dict:
+        return {
+            "description": self.description,
+            "duration_minutes": self.duration_minutes,
+            "priority": self.priority.value,
+            "pet_name": self.pet_name,
+            "time": self.time,
+            "frequency": self.frequency,
+            "completed": self.completed,
+            "due_date": self.due_date.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Task:
+        return cls(
+            description=data["description"],
+            duration_minutes=data["duration_minutes"],
+            priority=Priority(data["priority"]),
+            pet_name=data["pet_name"],
+            time=data["time"],
+            frequency=data["frequency"],
+            completed=data["completed"],
+            due_date=date.fromisoformat(data["due_date"]),
+        )
+
 
 @dataclass
 class Pet:
@@ -53,6 +79,19 @@ class Pet:
     def add_task(self, task: Task) -> None:
         """Append a care task to this pet."""
         self.tasks.append(task)
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "species": self.species,
+            "tasks": [task.to_dict() for task in self.tasks],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Pet:
+        pet = cls(name=data["name"], species=data["species"])
+        pet.tasks = [Task.from_dict(t) for t in data["tasks"]]
+        return pet
 
 
 @dataclass
@@ -67,6 +106,22 @@ class Owner:
     def get_all_tasks(self) -> list[Task]:
         """Gather tasks across all pets."""
         return [task for pet in self.pets for task in pet.tasks]
+
+    def save_to_json(self, path: str) -> None:
+        data = {
+            "name": self.name,
+            "pets": [pet.to_dict() for pet in self.pets],
+        }
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+
+    @classmethod
+    def load_from_json(cls, path: str) -> Owner:
+        with open(path) as f:
+            data = json.load(f)
+        owner = cls(name=data["name"])
+        owner.pets = [Pet.from_dict(p) for p in data["pets"]]
+        return owner
 
 
 class Scheduler:

@@ -218,3 +218,72 @@ def test_get_explanation_empty_schedule():
     scheduler = Scheduler(owner)
 
     assert scheduler.get_explanation() == "No tasks scheduled."
+
+
+# -- Serialization -------------------------------------------------------------
+
+
+def test_task_to_dict_and_from_dict_round_trip():
+    original = Task(
+        "Morning walk", 30, Priority.HIGH, "Mochi",
+        time="08:00", frequency="daily", completed=False,
+        due_date=date(2026, 3, 30),
+    )
+    rebuilt = Task.from_dict(original.to_dict())
+    assert rebuilt.description == original.description
+    assert rebuilt.duration_minutes == original.duration_minutes
+    assert rebuilt.priority == original.priority
+    assert rebuilt.pet_name == original.pet_name
+    assert rebuilt.time == original.time
+    assert rebuilt.frequency == original.frequency
+    assert rebuilt.completed == original.completed
+    assert rebuilt.due_date == original.due_date
+
+
+def test_pet_to_dict_and_from_dict_round_trip():
+    pet = Pet(name="Mochi", species="dog")
+    pet.add_task(Task("Walk", 30, Priority.HIGH, "Mochi",
+                       time="08:00", frequency="daily",
+                       due_date=date(2026, 3, 30)))
+    pet.add_task(Task("Grooming", 45, Priority.MEDIUM, "Mochi", time="14:00"))
+
+    rebuilt = Pet.from_dict(pet.to_dict())
+    assert rebuilt.name == pet.name
+    assert rebuilt.species == pet.species
+    assert len(rebuilt.tasks) == 2
+    assert rebuilt.tasks[0].description == "Walk"
+    assert rebuilt.tasks[0].priority == Priority.HIGH
+    assert rebuilt.tasks[1].description == "Grooming"
+
+
+def test_owner_save_and_load_json_round_trip(tmp_path):
+    owner = Owner(name="Jordan")
+    mochi = Pet(name="Mochi", species="dog")
+    owner.add_pet(mochi)
+    mochi.add_task(Task("Morning walk", 30, Priority.HIGH, "Mochi",
+                         time="08:00", frequency="daily",
+                         due_date=date(2026, 3, 30)))
+
+    path = str(tmp_path / "data.json")
+    owner.save_to_json(path)
+
+    loaded = Owner.load_from_json(path)
+    assert loaded.name == "Jordan"
+    assert len(loaded.pets) == 1
+    assert loaded.pets[0].name == "Mochi"
+    assert loaded.pets[0].species == "dog"
+    assert len(loaded.pets[0].tasks) == 1
+
+    task = loaded.pets[0].tasks[0]
+    assert task.description == "Morning walk"
+    assert task.duration_minutes == 30
+    assert task.priority == Priority.HIGH
+    assert task.due_date == date(2026, 3, 30)
+    assert task.frequency == "daily"
+
+
+def test_load_from_json_nonexistent_file_raises():
+    import pytest
+
+    with pytest.raises(FileNotFoundError):
+        Owner.load_from_json("/nonexistent/path/data.json")

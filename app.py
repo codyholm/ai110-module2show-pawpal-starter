@@ -1,6 +1,10 @@
+import os
+
 import streamlit as st
 
 from pawpal_system import Owner, Pet, Priority, Scheduler, Task
+
+DATA_FILE = "data.json"
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -9,7 +13,10 @@ st.caption("A pet care planning assistant that schedules tasks by priority and t
 
 # --- Session state: keep the Owner alive across reruns ---
 if "owner" not in st.session_state:
-    st.session_state.owner = Owner(name="Jordan")
+    if os.path.exists(DATA_FILE):
+        st.session_state.owner = Owner.load_from_json(DATA_FILE)
+    else:
+        st.session_state.owner = Owner(name="Jordan")
 
 owner = st.session_state.owner
 
@@ -18,6 +25,7 @@ st.subheader("Owner")
 new_name = st.text_input("Name", value=owner.name)
 if new_name != owner.name:
     owner.name = new_name
+    owner.save_to_json(DATA_FILE)
 
 st.divider()
 
@@ -32,6 +40,7 @@ with col2:
 
 if st.button("Add pet"):
     owner.add_pet(Pet(name=pet_name, species=species))
+    owner.save_to_json(DATA_FILE)
     st.session_state.pop("scheduler", None)
 
 if owner.pets:
@@ -75,6 +84,7 @@ if owner.pets:
             frequency=frequency,
         )
         selected_pet.add_task(task)
+        owner.save_to_json(DATA_FILE)
         st.session_state.pop("scheduler", None)
 
     all_tasks = owner.get_all_tasks()
