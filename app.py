@@ -86,6 +86,7 @@ if owner.pets:
         selected_pet.add_task(task)
         owner.save_to_json(DATA_FILE)
         st.session_state.pop("scheduler", None)
+        st.rerun()
 
     all_tasks = owner.get_all_tasks()
     if all_tasks:
